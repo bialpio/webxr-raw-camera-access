@@ -28,14 +28,6 @@ partial interface XRWebGLBinding {
 partial interface XRViewerPose {
   [SameObject] readonly attribute FrozenArray<XRView> cameraViews;
 };
-
-dictionary XRCameraAccessStateInit {
-  bool enabled;
-};
-
-partial interface XRSession {
-  void updateCameraAccessState(XRCameraAccessStateInit state);
-};
 ```
 
 This allows us to provide a time-indexed texture containing a camera image that is retrievable only when the XRFrame is considered active. The API should also be gated by the `“cameraAccess”` feature descriptor.
@@ -51,14 +43,7 @@ navigator.xr.requestSession(“immersive-ar”, { requiredFeatures: [“cameraAc
 
 If UA decides it needs to prompt the user for permission to use the camera, it can do so at this stage.
 
-2. Once the session is created, the application can configure it to enable the feature:
-```javascript
-session.updateCameraAccessState({enabled: true});
-```
-
-From this point onward, assuming that the session was created with the camera access feature listed in either requested or optional features and the user granted permissions, the `cameraViews` array will become populated with views that can subsequently be used to query the camera image texture. If the session configuration happened during a requestAnimationFrame callback, the changes will take effect no earlier than for subsequent requestAnimationFrame (but they can take longer than that).
-
-3. In requestAnimationFrame callback, the application can query for the camera view for which it’s interested in accessing the camera image:
+2. In requestAnimationFrame callback, the application can query for the camera view for which it’s interested in accessing the camera image:
 
 ```javascript
 // ... in rAFcb ...
@@ -66,7 +51,7 @@ let viewerPose = xrFrame.getViewerPose(xrRefSpace);
 let cameraView = viewerPose.cameraViews[0];
 ```
 
-4. Using the camera view, the application can then query the gl binding for the camera image texture:
+3. Using the camera view, the application can then query the gl binding for the camera image texture:
 ```javascript
 // ... in rAFcb ...
 let cameraTexture = binding.getCameraImage(xrFrame, cameraView);
